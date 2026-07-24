@@ -44,13 +44,13 @@
     flex-direction: column; 
     justify-content: space-between; 
     align-items: center;
-    padding: 15px 0;
+    padding: 20px 0;
   }
   
   #gameScreen { display: none; }
   
   h1 { 
-    font-size: 2.2em; 
+    font-size: 2.5em; 
     color: #FFD700; 
     text-shadow: 0 0 10px #FFD700, 0 0 20px rgba(0,0,0,0.8); 
     margin: 5px 0; 
@@ -58,23 +58,23 @@
 
   .avatar-list { 
     display: flex; 
-    gap: 15px; 
+    gap: 12px; 
     margin: 10px 0; 
     flex-wrap: wrap; 
     justify-content: center; 
-    max-width: 80%;
+    max-width: 85%;
   }
 
   .avatar { 
     background: rgba(0, 0, 0, 0.5); 
-    padding: 10px 15px; 
+    padding: 8px 12px; 
     border-radius: 15px; 
     font-size: 1.1em; 
     border: 1px solid rgba(255,255,255,0.2);
     backdrop-filter: blur(5px);
   }
 
-  /* Cabecera del juego inspirada en el diseño del ejemplo (botones de control flotantes superiores) */
+  /* Cabecera del juego inspirada en el diseño del ejemplo */
   .game-header {
     display: flex;
     justify-content: space-between;
@@ -129,12 +129,12 @@
     align-items: center;
   }
 
-  /* Tubos alargados y elegantes con aspecto de probeta similar al juego original */
+  /* Tubos alargados tipo probeta */
   .tube { 
     width: 52px; 
     height: 290px; 
     border: 3px solid rgba(255, 255, 255, 0.8); 
-    border-top: none; /* Apertura superior característica de tubos de ensayo */
+    border-top: none; 
     border-bottom-left-radius: 25px;
     border-bottom-right-radius: 25px;
     display: flex; 
@@ -165,380 +165,4 @@
   }
 
   .btn { 
-    background: #FFD700; 
-    color: #000; 
-    border: none; 
-    padding: 12px 30px; 
-    border-radius: 20px; 
-    font-size: 1.1em; 
-    cursor: pointer; 
-    font-weight: bold;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: transform 0.1s;
-  }
-
-  .btn:active {
-    transform: scale(0.95);
-  }
-
-  .selected { 
-    border-color: #FF4500 !important; 
-    box-shadow: 0 0 15px #FF4500, inset 0 0 10px rgba(255,69,0,0.3); 
-  }
-
-  #messageModal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-  }
-
-  .modal-content {
-    background: rgba(20, 20, 50, 0.95);
-    border: 3px solid #FFD700;
-    padding: 30px;
-    border-radius: 20px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-  }
-</style>
-</head>
-<body>
-
-<div id="bgContainer"></div>
-<div id="overlay"></div>
-
-<div id="messageModal">
-  <div class="modal-content">
-    <h2 id="modalTitle" style="color: #FFD700; margin-top: 0;">¡Título!</h2>
-    <p id="modalText" style="font-size: 1.2em; margin-bottom: 20px;">Mensaje aquí</p>
-    <button class="btn" id="modalBtn" onclick="closeModal()">Continuar</button>
-  </div>
-</div>
-
-<div id="startScreen">
-  <div>
-    <h1>Karipop</h1>
-    <p>Kari pop versión Chiquibeitas</p>
-  </div>
-  <div>
-    <h2>🌟 Los Avatares Principales 🌟</h2>
-    <div class="avatar-list">
-      <div class="avatar">🐰 : Kari</div>
-      <div class="avatar">🧀 : Beita</div>
-      <div class="avatar">🌸 : Daya</div>
-      <div class="avatar">🍒 : Cristi</div>
-    </div>
-  </div>
-  <button class="btn" onclick="startGame()">¡Jugar Ahora!</button>
-</div>
-
-<div id="gameScreen">
-  <div class="game-header">
-    <button class="icon-btn" onclick="restartGame()" title="Reiniciar">🔄</button>
-    <div class="level-indicator">
-      <span style="font-size: 0.75em; letter-spacing: 1px; color: #ccc;">LEVEL</span>
-      <span id="levelNumberText" style="font-size: 1.3em; font-weight: bold; color: #FFD700;">1</span>
-    </div>
-    <div style="display: flex; gap: 8px;">
-      <button class="icon-btn" onclick="undoMove()" title="Deshacer">↩️</button>
-      <button class="icon-btn" onclick="addExtraTube()" title="Tubo Extra" id="extraTubeBtn">➕</button>
-    </div>
-  </div>
-
-  <div>
-    <p id="levelText" style="margin: 5px 0 0 0; font-size: 0.95em; color: #e0e0e0;">Ordena a cada avatar en su tubo</p>
-    <p id="movesText" style="margin: 3px 0 5px 0; font-size: 0.85em; color: #FFD700; font-weight: bold;">Intentos restantes: 0</p>
-  </div>
-
-  <div class="tubes" id="tubes"></div>
-
-  <div style="height: 10px;"></div>
-</div>
-
-<script>
-const BACKGROUND_IMAGE_URL = 'https://i.pinimg.com/originals/2h/km/52/2hkm52.jpg'; 
-document.getElementById('bgContainer').style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}')`;
-
-// Colores claros y contrastantes con los emojis
-const allAvatars = [
-  {emoji:'🐰', name:'Kari', color:'#ffb3ba'},     
-  {emoji:'🧀', name:'Beita', color:'#ffffba'},    
-  {emoji:'🌸', name:'Daya', color:'#baffc9'},     
-  {emoji:'🍒', name:'Cristi', color:'#ffdfba'},   
-  {emoji:'🦫', name:'Adriana', color:'#bae1ff'},  
-  {emoji:'🦭', name:'Mirella', color:'#e8c5ff'},  
-  {emoji:'🦊', name:'Alexis', color:'#ffd1dc'}    
-];
-
-let level = 1;
-let tubes = [];
-let selected = null;
-const TUBE_CAPACITY = 4;
-let remainingMoves = 0;
-let historyMoves = []; 
-let extraTubeAdded = false;
-
-// Sistema de Audio Sintetizado (Efecto "pop/burbuja" limpio sin dependencias externas)
-let audioCtx = null;
-function playPopSound() {
-  try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    
-    osc.type = 'sine';
-    // Curva de frecuencia ascendente imitando el sonido de una burbuja de agua al moverse
-    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(750, audioCtx.currentTime + 0.08);
-    
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-    
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.08);
-  } catch (e) {
-    // Evita bloqueos de políticas de autoplay del navegador
-  }
-}
-
-function getAvatarsForLevel(lvl){
-  if(lvl <= 2) return allAvatars.slice(0,4);
-  if(lvl == 3) return allAvatars.slice(0,5);
-  if(lvl == 4) return allAvatars.slice(0,6);
-  return allAvatars;
-}
-
-function getTubesForLevel(lvl){
-  if(lvl <= 2) return 6;
-  if(lvl == 3) return 7;
-  if(lvl == 4) return 8;  
-  return 9;
-}
-
-function startGame(){
-  document.getElementById('startScreen').style.display = 'none';
-  document.getElementById('gameScreen').style.display = 'flex';
-  createTubes();
-}
-
-function createTubes(){
-  document.getElementById('levelNumberText').innerText = level;
-  document.getElementById('levelText').innerText = `Nivel ${level} - Ordena a cada avatar en su tubo`;
-  
-  const container = document.getElementById('tubes');
-  container.innerHTML = '';
-  tubes = [];
-  selected = null;
-  historyMoves = [];
-  extraTubeAdded = false;
-  
-  // Reactivar el botón de tubo extra al iniciar un nuevo nivel
-  const extraBtn = document.getElementById('extraTubeBtn');
-  extraBtn.style.opacity = '1';
-  extraBtn.style.pointerEvents = 'auto';
-  
-  const avatars = getAvatarsForLevel(level);
-  const totalTubes = getTubesForLevel(level);
-  
-  // Limite de intentos ajustado (más preciso y desafiante, evitando exceso innecesario)
-  remainingMoves = (avatars.length * TUBE_CAPACITY) + 12;
-  updateMovesDisplay();
-
-  let allBalls = [];
-  avatars.forEach(avatar => {
-    for(let i = 0; i < TUBE_CAPACITY; i++) {
-      allBalls.push(avatar);
-    }
-  });
-  
-  allBalls.sort(() => Math.random() - 0.5);
-  
-  for(let i = 0; i < totalTubes; i++){
-    tubes.push([]);
-    let tubeEl = document.createElement('div');
-    tubeEl.className = 'tube';
-    tubeEl.onclick = () => selectTube(i);
-    container.appendChild(tubeEl);
-  }
-  
-  let ballIndex = 0;
-  for(let i = 0; i < totalTubes - 2; i++){
-    for(let j = 0; j < TUBE_CAPACITY; j++){
-      if(ballIndex < allBalls.length){
-        tubes[i].push(allBalls[ballIndex]);
-        ballIndex++;
-      }
-    }
-  }
-
-  renderTubes();
-}
-
-function selectTube(i){
-  const tubeElements = document.querySelectorAll('.tube');
-  
-  if(selected === null){
-    if(tubes[i].length > 0){
-      selected = i;
-      tubeElements[i].classList.add('selected');
-    }
-  } else {
-    let validMove = false;
-    if (selected !== i && tubes[i].length < TUBE_CAPACITY) {
-      let sourceTube = tubes[selected];
-      let destTube = tubes[i];
-      let movingBall = sourceTube[sourceTube.length - 1];
-
-      if (destTube.length === 0 || destTube[destTube.length - 1].emoji === movingBall.emoji) {
-        validMove = true;
-      }
-    }
-
-    if(validMove){
-      historyMoves.push(tubes.map(t => [...t]));
-
-      let ball = tubes[selected].pop();
-      tubes[i].push(ball);
-      
-      // Reproducir sonido de burbuja al mover exitosamente la ficha
-      playPopSound();
-      
-      remainingMoves--;
-      updateMovesDisplay();
-      renderTubes();
-      
-      setTimeout(checkGameStatus, 100);
-    }
-    
-    tubeElements.forEach(t => t.classList.remove('selected'));
-    selected = null;
-  }
-}
-
-function undoMove() {
-  if (historyMoves.length > 0) {
-    tubes = historyMoves.pop();
-    remainingMoves++;
-    updateMovesDisplay();
-    renderTubes();
-    selected = null;
-    document.querySelectorAll('.tube').forEach(t => t.classList.remove('selected'));
-  }
-}
-
-function addExtraTube() {
-  if (!extraTubeAdded) {
-    tubes.push([]);
-    extraTubeAdded = true;
-    
-    const container = document.getElementById('tubes');
-    let tubeEl = document.createElement('div');
-    tubeEl.className = 'tube';
-    let newIndex = tubes.length - 1;
-    tubeEl.onclick = () => selectTube(newIndex);
-    container.appendChild(tubeEl);
-    renderTubes();
-    
-    // Deshabilitar visualmente el botón tras usarlo en el nivel actual
-    const extraBtn = document.getElementById('extraTubeBtn');
-    extraBtn.style.opacity = '0.5';
-    extraBtn.style.pointerEvents = 'none';
-  }
-}
-
-function updateMovesDisplay() {
-  document.getElementById('movesText').innerText = `Intentos restantes: ${remainingMoves}`;
-}
-
-function renderTubes(){
-  const tubeDivs = document.querySelectorAll('.tube');
-  
-  tubeDivs.forEach((tubeEl, i) => {
-    tubeEl.innerHTML = '';
-    if(tubes[i]) {
-      tubes[i].forEach(ballData => {
-        let ball = document.createElement('div');
-        ball.className = 'ball';
-        ball.innerText = ballData.emoji;
-        ball.style.backgroundColor = ballData.color; 
-        tubeEl.appendChild(ball);
-      });
-    }
-  });
-}
-
-function checkGameStatus(){
-  let completedTubes = 0;
-  const avatarsInPlay = getAvatarsForLevel(level).length;
-
-  for(let tube of tubes){
-    if(tube.length === 0){
-      continue;
-    }
-    if(tube.length === TUBE_CAPACITY){
-      const firstEmoji = tube[0].emoji;
-      const allSame = tube.every(ball => ball.emoji === firstEmoji);
-      if(allSame) {
-        completedTubes++;
-      }
-    }
-  }
-
-  if(completedTubes === avatarsInPlay){
-    showModal("🎉 ¡Nivel Superado!", `¡Excelente! Has completado el Nivel ${level}.`, () => {
-      level++;
-      createTubes();
-    });
-    return;
-  }
-
-  if(remainingMoves <= 0) {
-    showModal("😢 ¡Sin Intentos!", "Te has quedado sin movimientos en este nivel.", () => {
-      restartGame();
-    });
-  }
-}
-
-function showModal(title, text, callback = null) {
-  document.getElementById('modalTitle').innerText = title;
-  document.getElementById('modalText').innerText = text;
-  const btn = document.getElementById('modalBtn');
-  
-  let newBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(newBtn, btn);
-  
-  newBtn.onclick = () => {
-    closeModal();
-    if(callback) callback();
-  };
-  
-  document.getElementById('messageModal').style.display = 'flex';
-}
-
-function closeModal() {
-  document.getElementById('messageModal').style.display = 'none';
-}
-
-function restartGame(){ 
-  createTubes(); 
-}
-</script>
-</body>
-</html>
+    background: #FFD700;
