@@ -15,7 +15,6 @@
     overflow: hidden;
   }
 
-  /* Fondo dinámico cargado desde la variable de JavaScript */
   #bgContainer {
     position: fixed;
     top: 0;
@@ -28,7 +27,6 @@
     z-index: -2;
   }
 
-  /* Capa para oscurecer ligeramente la imagen y mejorar visibilidad */
   #overlay {
     position: fixed;
     top: 0;
@@ -115,6 +113,14 @@
     transition: all 0.2s ease;
   }
 
+  .btn-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
   .btn { 
     background: #FFD700; 
     color: #000; 
@@ -123,7 +129,6 @@
     border-radius: 20px; 
     font-size: 1.1em; 
     cursor: pointer; 
-    margin: 10px; 
     font-weight: bold;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     transition: transform 0.1s;
@@ -137,12 +142,46 @@
     border: 4px solid #FF4500 !important; 
     box-shadow: 0 0 15px #FF4500; 
   }
+
+  /* Modal interno para mensajes dentro del juego */
+  #messageModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .modal-content {
+    background: rgba(20, 20, 50, 0.95);
+    border: 3px solid #FFD700;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
 </style>
 </head>
 <body>
 
 <div id="bgContainer"></div>
 <div id="overlay"></div>
+
+<!-- Modal interno para avisos -->
+<div id="messageModal">
+  <div class="modal-content">
+    <h2 id="modalTitle" style="color: #FFD700; margin-top: 0;">¡Título!</h2>
+    <p id="modalText" style="font-size: 1.2em; margin-bottom: 20px;">Mensaje aquí</p>
+    <button class="btn" id="modalBtn" onclick="closeModal()">Continuar</button>
+  </div>
+</div>
 
 <div id="startScreen">
   <h1>Karipop</h1>
@@ -160,32 +199,37 @@
 <div id="gameScreen">
   <h1>Karipop</h1>
   <p id="levelText">Nivel 1 - Ordena a cada avatar en su tubo</p>
+  <p id="movesText" style="font-weight: bold; color: #FFD700;">Intentos restantes: 0</p>
   <div class="tubes" id="tubes"></div>
-  <button class="btn" onclick="restartGame()">Reiniciar</button>
+  <div class="btn-container">
+    <button class="btn" onclick="undoMove()">Deshacer</button>
+    <button class="btn" onclick="addExtraTube()">+ Tubo Extra</button>
+    <button class="btn" onclick="restartGame()">Reiniciar</button>
+  </div>
 </div>
 
 <script>
-// --- CONFIGURACIÓN DE LA IMAGEN DE FONDO ---
-// Puedes reemplazar este enlace si deseas utilizar la URL directa final (.jpg / .png)
 const BACKGROUND_IMAGE_URL = 'https://i.pinimg.com/originals/2h/km/52/2hkm52.jpg'; 
-
 document.getElementById('bgContainer').style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}')`;
 
-// Avatares con sus respectivos colores asignados
+// Colores claros optimizados para que hagan contraste con emojis oscuros o claros
 const allAvatars = [
-  {emoji:'🐰', name:'Kari', color:'#ffb7c5'},     // Rosa
-  {emoji:'🧀', name:'Beita', color:'#ffe135'},    // Amarillo
-  {emoji:'🌸', name:'Daya', color:'#e3a018'},     // Melocotón/Lila
-  {emoji:'🍒', name:'Cristi', color:'#ff6b6b'},   // Rojo suave
-  {emoji:'🦫', name:'Adriana', color:'#d4a373'},  // Café claro
-  {emoji:'🦭', name:'Mirella', color:'#a2d2ff'},  // Azul claro
-  {emoji:'🦊', name:'Alexis', color:'#fca311'}    // Naranja
+  {emoji:'🐰', name:'Kari', color:'#ffb3ba'},     
+  {emoji:'🧀', name:'Beita', color:'#ffffba'},    
+  {emoji:'🌸', name:'Daya', color:'#baffc9'},     
+  {emoji:'🍒', name:'Cristi', color:'#ffdfba'},   
+  {emoji:'🦫', name:'Adriana', color:'#bae1ff'},  
+  {emoji:'🦭', name:'Mirella', color:'#e8c5ff'},  
+  {emoji:'🦊', name:'Alexis', color:'#ffd1dc'}    
 ];
 
 let level = 1;
 let tubes = [];
 let selected = null;
 const TUBE_CAPACITY = 4;
+let remainingMoves = 0;
+let historyMoves = []; // Historial para la función Deshacer (Undo)
+let extraTubeAdded = false;
 
 function getAvatarsForLevel(lvl){
   if(lvl <= 2) return allAvatars.slice(0,4);
@@ -213,10 +257,16 @@ function createTubes(){
   container.innerHTML = '';
   tubes = [];
   selected = null;
+  historyMoves = [];
+  extraTubeAdded = false;
   
   const avatars = getAvatarsForLevel(level);
   const totalTubes = getTubesForLevel(level);
   
+  // Asignar un límite de intentos dinámico y generoso según la cantidad de fichas
+  remainingMoves = (avatars.length * TUBE_CAPACITY) * 3;
+  updateMovesDisplay();
+
   let allBalls = [];
   avatars.forEach(avatar => {
     for(let i = 0; i < TUBE_CAPACITY; i++) {
@@ -231,7 +281,7 @@ function createTubes(){
     tubes.push([]);
     let tubeEl = document.createElement('div');
     tubeEl.className = 'tube';
-    tubeEl.onclick = () => selectTube(i, tubeEl);
+    tubeEl.onclick = () => selectTube(i);
     container.appendChild(tubeEl);
   }
   
@@ -248,7 +298,7 @@ function createTubes(){
   renderTubes();
 }
 
-function selectTube(i, tubeEl){
+function selectTube(i){
   const tubeElements = document.querySelectorAll('.tube');
   
   if(selected === null){
@@ -257,15 +307,30 @@ function selectTube(i, tubeEl){
       tubeElements[i].classList.add('selected');
     }
   } else {
-    // Verificar si el movimiento es válido (tubo destino no lleno)
-    if(selected !== i && tubes[i].length < TUBE_CAPACITY){
+    // Reglas de movimiento: Mismo color o tubo vacío, y destino con espacio suficiente
+    let validMove = false;
+    if (selected !== i && tubes[i].length < TUBE_CAPACITY) {
+      let sourceTube = tubes[selected];
+      let destTube = tubes[i];
+      let movingBall = sourceTube[sourceTube.length - 1];
+
+      if (destTube.length === 0 || destTube[destTube.length - 1].emoji === movingBall.emoji) {
+        validMove = true;
+      }
+    }
+
+    if(validMove){
+      // Guardar estado actual en el historial antes de mover
+      historyMoves.push(tubes.map(t => [...t]));
+
       let ball = tubes[selected].pop();
       tubes[i].push(ball);
       
+      remainingMoves--;
+      updateMovesDisplay();
       renderTubes();
       
-      // Comprobar si se completó el nivel tras el movimiento
-      setTimeout(checkWin, 100);
+      setTimeout(checkGameStatus, 100);
     }
     
     tubeElements.forEach(t => t.classList.remove('selected'));
@@ -273,28 +338,60 @@ function selectTube(i, tubeEl){
   }
 }
 
+function undoMove() {
+  if (historyMoves.length > 0) {
+    tubes = historyMoves.pop();
+    remainingMoves++;
+    updateMovesDisplay();
+    renderTubes();
+    selected = null;
+    document.querySelectorAll('.tube').forEach(t => t.classList.remove('selected'));
+  }
+}
+
+function addExtraTube() {
+  if (!extraTubeAdded) {
+    tubes.push([]);
+    extraTubeAdded = true;
+    
+    const container = document.getElementById('tubes');
+    let tubeEl = document.createElement('div');
+    tubeEl.className = 'tube';
+    let newIndex = tubes.length - 1;
+    tubeEl.onclick = () => selectTube(newIndex);
+    container.appendChild(tubeEl);
+    renderTubes();
+  } else {
+    showModal("Aviso", "Ya has añadido el tubo extra en este nivel.");
+  }
+}
+
+function updateMovesDisplay() {
+  document.getElementById('movesText').innerText = `Intentos restantes: ${remainingMoves}`;
+}
+
 function renderTubes(){
   const tubeDivs = document.querySelectorAll('.tube');
   
   tubeDivs.forEach((tubeEl, i) => {
     tubeEl.innerHTML = '';
-    tubes[i].forEach(ballData => {
-      let ball = document.createElement('div');
-      ball.className = 'ball';
-      ball.innerText = ballData.emoji;
-      // Asignar el color individual de fondo
-      ball.style.backgroundColor = ballData.color; 
-      tubeEl.appendChild(ball);
-    });
+    if(tubes[i]) {
+      tubes[i].forEach(ballData => {
+        let ball = document.createElement('div');
+        ball.className = 'ball';
+        ball.innerText = ballData.emoji;
+        ball.style.backgroundColor = ballData.color; 
+        tubeEl.appendChild(ball);
+      });
+    }
   });
 }
 
-function checkWin(){
+function checkGameStatus(){
   let completedTubes = 0;
   const avatarsInPlay = getAvatarsForLevel(level).length;
 
   for(let tube of tubes){
-    // Un tubo está completado si está vacío O si está lleno con 4 elementos iguales
     if(tube.length === 0){
       continue;
     }
@@ -307,12 +404,40 @@ function checkWin(){
     }
   }
 
-  // Si se ordenaron la totalidad de avatares activos
   if(completedTubes === avatarsInPlay){
-    alert(`🎉 ¡Felicidades! Has completado el Nivel ${level}`);
-    level++;
-    createTubes();
+    showModal("🎉 ¡Nivel Superado!", `Has completado exitosamente el Nivel ${level}.`, () => {
+      level++;
+      createTubes();
+    });
+    return;
   }
+
+  if(remainingMoves <= 0) {
+    showModal("😢 ¡Sin Intentos!", "Te has quedado sin movimientos. Reiniciemos el nivel.", () => {
+      restartGame();
+    });
+  }
+}
+
+function showModal(title, text, callback = null) {
+  document.getElementById('modalTitle').innerText = title;
+  document.getElementById('modalText').innerText = text;
+  const btn = document.getElementById('modalBtn');
+  
+  // Reemplazar la acción del botón del modal de forma limpia
+  let newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  
+  newBtn.onclick = () => {
+    closeModal();
+    if(callback) callback();
+  };
+  
+  document.getElementById('messageModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('messageModal').style.display = 'none';
 }
 
 function restartGame(){ 
