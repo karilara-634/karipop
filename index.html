@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Clasificación: Noche Estrellada</title>
+    <style>
+        /* Fondo animado estilo Noche Estrellada de Van Gogh */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0b1d3a, #1c3b57, #122238, #050a14);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Remolinos decorativos simulando la pintura */
+        .swirl-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(243,213,115,0.08) 0%, rgba(13,40,79,0) 70%);
+            animation: pulseSwirl 8s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes pulseSwirl {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 0.9; }
+        }
+
+        header {
+            text-align: center;
+            margin-top: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: #f7d560;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(247, 213, 96, 0.3);
+        }
+
+        /* Contenedor principal de los tubos */
+        .game-board {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        /* Estilo de los tubos o recipientes */
+        .tube {
+            width: 65px;
+            height: 240px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 4px solid rgba(247, 213, 96, 0.7);
+            border-top: none;
+            border-radius: 0 0 35px 35px;
+            position: relative;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            padding-bottom: 8px;
+            gap: 6px;
+            cursor: pointer;
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.2), 0 8px 16px rgba(0,0,0,0.4);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .tube::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            height: 10px;
+            background: rgba(247, 213, 96, 0.9);
+            border-radius: 5px;
+        }
+
+        .tube.selected {
+            transform: translateY(-12px);
+            border-color: #ffffff;
+            box-shadow: 0 0 20px #f7d560, inset 0 0 15px rgba(255,255,255,0.3);
+        }
+
+        /* Estilo de los avatares caricaturescos dentro de los tubos */
+        .ball {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3);
+            animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Colores temáticos para cada avatar */
+        .avatar-star { background: radial-gradient(circle at 30% 30%, #ffee55, #f57f17); }
+        .avatar-cherry { background: radial-gradient(circle at 30% 30%, #ff5252, #b71c1c); }
+        .avatar-flower { background: radial-gradient(circle at 30% 30%, #ab47bc, #4a148c); }
+        .avatar-cheese { background: radial-gradient(circle at 30% 30%, #ffee58, #fbc02d); }
+
+        /* Controles y botones del juego */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #f7d560, #d4ac0d);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: #1a1a1a;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s, filter 0.2s;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* Mensaje emergente de victoria */
+        #message {
+            margin-top: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #a3e4d7;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="swirl-bg"></div>
+
+    <header>
+        <h1>Clasificación Estelar</h1>
+        <div class="stats-container">
+            <span id="level-indicator">Nivel: 1</span>
+            <span id="score-indicator">Puntos: 0</span>
+        </div>
+    </header>
+
+    <div class="game-board" id="game-board"></div>
+
+    <div id="message"></div>
+
+    <div class="controls">
+        <button onclick="undoMove()">Deshacer (Undo)</button>
+        <button onclick="resetLevel()">Reiniciar (Reset)</button>
+        <button onclick="addExtraTube()">+ Tubo Extra</button>
+    </div>
+
+    <script>
+        // Configuración de avatares disponibles
+        const avataresConfig = [
+            { type: 'star', emoji: '⭐', class: 'avatar-star' },
+            { type: 'cherry', emoji: '🍒', class: 'avatar-cherry' },
+            { type: 'flower', emoji: '🌸', class: 'avatar-flower' },
+            { type: 'cheese', emoji: '🧀', class: 'avatar-cheese' }
+        ];
+
+        const TUBE_CAPACITY = 4;
+        let currentLevel = 1;
+        let score = 0;
+        let tubes = [];
+        let historyStates = [];
+        let selectedTubeIndex = null;
+        let extraTubeAdded = false;
+
+        // Iniciar el juego al cargar la página
+        window.onload = () => {
+            initLevel();
+        };
+
+        function initLevel() {
+            selectedTubeIndex = null;
+            extraTubeAdded = false;
+            historyStates = [];
+            document.getElementById('message').innerText = '';
+            document.getElementById('level-indicator').innerText = `Nivel: ${currentLevel}`;
+            document.getElementById('score-indicator').innerText = `Puntos: ${score}`;
+
+            // Determinar cuántos tipos de avatares usar según el nivel (Dificultad escalable)
+            let numColors = Math.min(2 + Math.floor(currentLevel / 2), avataresConfig.length);
+            let activeAvatares = avataresConfig.slice(0, numColors);
+
+            // Crear baraja de elementos (4 de cada tipo)
+            let pool = [];
+            activeAvatares.forEach(av => {
+                for (let i = 0; i < TUBE_CAPACITY; i++) {
+                    pool.push({ ...av });
+                }
+            });
+
+            // Mezclar aleatoriamente los elementos
+            pool.sort(() => Math.random() - 0.5);
+
+            // Calcular número de tubos necesarios (los de elementos + 2 vacíos extra)
+            let numFilledTubes = numColors;
+            let numEmptyTubes = 2;
+            let totalTubes = numFilledTubes + numEmptyTubes;
+
+            tubes = [];
+            for (let i = 0; i < totalTubes; i++) {
+                tubes.push([]);
+            }
+
+            // Distribuir los elementos en los tubos correspondientes
+            let poolIndex = 0;
+            for (let i = 0; i < numFilledTubes; i++) {
+                for (let j = 0; j < TUBE_CAPACITY; j++) {
+                    tubes[i].push(pool[poolIndex++]);
+                }
+            }
+
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+
+            tubes.forEach((tube, index) => {
+                const tubeEl = document.createElement('div');
+                tubeEl.classList.add('tube');
+                if (selectedTubeIndex === index) {
+                    tubeEl.classList.add('selected');
+                }
+                tubeEl.onclick = () => handleTubeClick(index);
+
+                tube.forEach(item => {
+                    const ballEl = document.createElement('div');
+                    ballEl.classList.add('ball', item.class);
+                    ballEl.innerText = item.emoji;
+                    tubeEl.appendChild(ballEl);
+                });
+
+                board.appendChild(tubeEl);
+            });
+        }
+
+        function handleTubeClick(index) {
+            if (selectedTubeIndex === null) {
+                // Seleccionar tubo de origen (no puede estar vacío)
+                if (tubes[index].length === 0) return;
+                selectedTubeIndex = index;
+            } else {
+                if (selectedTubeIndex === index) {
+                    // Si toca el mismo tubo, se deselecciona
+                    selectedTubeIndex = null;
+                } else {
+                    // Intentar mover el elemento al tubo de destino
+                    if (isValidMove(selectedTubeIndex, index)) {
+                        saveStateForUndo();
+                        let movingItem = tubes[selectedTubeIndex].pop();
+                        tubes[index].push(movingItem);
+                        selectedTubeIndex = null;
+                        checkWinCondition();
+                    } else {
+                        // Cambiar de selección si el tubo destino tiene elementos y es válido
+                        if (tubes[index].length > 0) {
+                            selectedTubeIndex = index;
+                        } else {
+                            selectedTubeIndex = null;
+                        }
+                    }
+                }
+            }
+            renderBoard();
+        }
+
+        function isValidMove(fromIdx, toIdx) {
+            const origin = tubes[fromIdx];
+            const destination = tubes[toIdx];
+
+            // El tubo destino no puede estar lleno (máximo 4 elementos)
+            if (destination.length >= TUBE_CAPACITY) return false;
+            // El tubo origen tiene elementos
+            if (origin.length === 0) return false;
+            // Si el tubo destino está vacío, cualquier movimiento es válido
+            if (destination.length === 0) return true;
+
+            // La regla principal: el elemento superior del origen debe coincidir con el superior del destino
+            const topOrigin = origin[origin.length - 1];
+            const topDestination = destination[destination.length - 1];
+
+            return topOrigin.type === topDestination.type;
+        }
+
+        function saveStateForUndo() {
+            // Guardar copia profunda del estado actual de los tubos
+            let stateCopy = tubes.map(tube => tube.map(item => ({ ...item })));
+            historyStates.push(stateCopy);
+        }
+
+        function undoMove() {
+            if (historyStates.length > 0) {
+                tubes = historyStates.pop();
+                selectedTubeIndex = null;
+                document.getElementById('message').innerText = '';
+                renderBoard();
+            }
+        }
+
+        function resetLevel() {
+            initLevel();
+        }
+
+        function addExtraTube() {
+            if (!extraTubeAdded) {
+                tubes.push([]);
+                extraTubeAdded = true;
+                renderBoard();
+            } else {
+                document.getElementById('message').innerText = 'Ya agregaste un tubo extra en este nivel.';
+            }
+        }
+
+        function checkWinCondition() {
+            let won = true;
+            tubes.forEach(tube => {
+                if (tube.length > 0) {
+                    if (tube.length < TUBE_CAPACITY) {
+                        won = false;
+                    } else {
+                        let firstType = tube[0].type;
+                        for (let i = 1; i < tube.length; i++) {
+                            if (tube[i].type !== firstType) {
+                                won = false;
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (won) {
+                score += currentLevel * 100;
+                document.getElementById('score-indicator').innerText = `Puntos: ${score}`;
+                document.getElementById('message').innerText = '¡Nivel Superado! Subiendo de nivel...';
+                setTimeout(() => {
+                    currentLevel++;
+                    initLevel();
+                }, 1500);
+            }
+        }
+    </script>
+</body>
+</html>
