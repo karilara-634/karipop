@@ -5,13 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Karipop</title>
 <style>
+  * { box-sizing: border-box; }
+  
   body { 
     margin: 0; 
     font-family: 'Poppins', sans-serif; 
-    background: linear-gradient(to bottom, #0a0a2a, #1a1a4a); 
     color: white; 
     text-align: center; 
+    overflow: hidden;
   }
+
+  /* Fondo dinámico cargado desde la variable de JavaScript */
+  #bgContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -2;
+  }
+
+  /* Capa para oscurecer ligeramente la imagen y mejorar visibilidad */
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 42, 0.65);
+    z-index: -1;
+  }
+
   #startScreen, #gameScreen { 
     width: 100vw; 
     height: 100vh; 
@@ -20,11 +47,43 @@
     justify-content: center; 
     align-items: center; 
   }
+  
   #gameScreen { display: none; }
-  h1 { font-size: 3em; color: #FFD700; text-shadow: 0 0 10px #FFD700; margin: 10px 0; }
-  .avatar-list { display: flex; gap: 15px; margin: 20px 0; flex-wrap: wrap; justify-content: center; }
-  .avatar { background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px; font-size: 1.2em; }
-  .tubes { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+  
+  h1 { 
+    font-size: 3em; 
+    color: #FFD700; 
+    text-shadow: 0 0 10px #FFD700, 0 0 20px rgba(0,0,0,0.8); 
+    margin: 10px 0; 
+  }
+
+  .avatar-list { 
+    display: flex; 
+    gap: 15px; 
+    margin: 20px 0; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    max-width: 80%;
+  }
+
+  .avatar { 
+    background: rgba(0, 0, 0, 0.5); 
+    padding: 10px 15px; 
+    border-radius: 15px; 
+    font-size: 1.2em; 
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(5px);
+  }
+
+  .tubes { 
+    display: flex; 
+    gap: 15px; 
+    margin-top: 15px; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    max-width: 95vw;
+  }
+
   .tube { 
     width: 70px; 
     height: 280px; 
@@ -34,20 +93,28 @@
     flex-direction: column-reverse; 
     padding: 5px; 
     cursor: pointer; 
-    background: rgba(0,0,0,0.3); 
-    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.5); 
+    backdrop-filter: blur(5px);
+    transition: transform 0.2s, border-color 0.2s;
   }
+
+  .tube:hover {
+    transform: translateY(-5px);
+  }
+
   .ball { 
-    width: 55px; 
-    height: 55px; 
+    width: 54px; 
+    height: 54px; 
     border-radius: 50%; 
     margin: 3px auto; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     font-size: 2em; 
-    background: white; 
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
   }
+
   .btn { 
     background: #FFD700; 
     color: #000; 
@@ -58,11 +125,24 @@
     cursor: pointer; 
     margin: 10px; 
     font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
   }
-  .selected { border: 4px solid #FF4500; box-shadow: 0 0 15px #FF4500; }
+
+  .btn:active {
+    transform: scale(0.95);
+  }
+
+  .selected { 
+    border: 4px solid #FF4500 !important; 
+    box-shadow: 0 0 15px #FF4500; 
+  }
 </style>
 </head>
 <body>
+
+<div id="bgContainer"></div>
+<div id="overlay"></div>
 
 <div id="startScreen">
   <h1>Karipop</h1>
@@ -85,20 +165,27 @@
 </div>
 
 <script>
+// --- CONFIGURACIÓN DE LA IMAGEN DE FONDO ---
+// Puedes reemplazar este enlace si deseas utilizar la URL directa final (.jpg / .png)
+const BACKGROUND_IMAGE_URL = 'https://i.pinimg.com/originals/2h/km/52/2hkm52.jpg'; 
+
+document.getElementById('bgContainer').style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}')`;
+
+// Avatares con sus respectivos colores asignados
 const allAvatars = [
-  {emoji:'🐰', name:'Kari'},
-  {emoji:'🧀', name:'Beita'},
-  {emoji:'🌸', name:'Daya'},
-  {emoji:'🍒', name:'Cristi'},
-  {emoji:'🦫', name:'Adriana'},
-  {emoji:'🦭', name:'Mirella'},
-  {emoji:'🦊', name:'Alexis'}
+  {emoji:'🐰', name:'Kari', color:'#ffb7c5'},     // Rosa
+  {emoji:'🧀', name:'Beita', color:'#ffe135'},    // Amarillo
+  {emoji:'🌸', name:'Daya', color:'#e3a018'},     // Melocotón/Lila
+  {emoji:'🍒', name:'Cristi', color:'#ff6b6b'},   // Rojo suave
+  {emoji:'🦫', name:'Adriana', color:'#d4a373'},  // Café claro
+  {emoji:'🦭', name:'Mirella', color:'#a2d2ff'},  // Azul claro
+  {emoji:'🦊', name:'Alexis', color:'#fca311'}    // Naranja
 ];
 
 let level = 1;
 let tubes = [];
 let selected = null;
-const TUBE_CAPACITY = 4; // Límite de bolitas por tubo
+const TUBE_CAPACITY = 4;
 
 function getAvatarsForLevel(lvl){
   if(lvl <= 2) return allAvatars.slice(0,4);
@@ -121,6 +208,7 @@ function startGame(){
 }
 
 function createTubes(){
+  document.getElementById('levelText').innerText = `Nivel ${level} - Ordena a cada avatar en su tubo`;
   const container = document.getElementById('tubes');
   container.innerHTML = '';
   tubes = [];
@@ -129,7 +217,6 @@ function createTubes(){
   const avatars = getAvatarsForLevel(level);
   const totalTubes = getTubesForLevel(level);
   
-  // Generar bolitas (4 de cada tipo para que quepan en los tubos)
   let allBalls = [];
   avatars.forEach(avatar => {
     for(let i = 0; i < TUBE_CAPACITY; i++) {
@@ -137,10 +224,9 @@ function createTubes(){
     }
   });
   
-  // Mezclar bolitas
+  // Mezclar bolitas aleatoriamente
   allBalls.sort(() => Math.random() - 0.5);
   
-  // Crear estructura de los tubos
   for(let i = 0; i < totalTubes; i++){
     tubes.push([]);
     let tubeEl = document.createElement('div');
@@ -149,7 +235,6 @@ function createTubes(){
     container.appendChild(tubeEl);
   }
   
-  // Repartir bolitas en los tubos (dejando 2 vacíos al final)
   let ballIndex = 0;
   for(let i = 0; i < totalTubes - 2; i++){
     for(let j = 0; j < TUBE_CAPACITY; j++){
@@ -167,22 +252,24 @@ function selectTube(i, tubeEl){
   const tubeElements = document.querySelectorAll('.tube');
   
   if(selected === null){
-    // Seleccionar tubo de origen
     if(tubes[i].length > 0){
       selected = i;
       tubeElements[i].classList.add('selected');
     }
   } else {
-    // Intentar mover al tubo de destino
+    // Verificar si el movimiento es válido (tubo destino no lleno)
     if(selected !== i && tubes[i].length < TUBE_CAPACITY){
       let ball = tubes[selected].pop();
       tubes[i].push(ball);
+      
+      renderTubes();
+      
+      // Comprobar si se completó el nivel tras el movimiento
+      setTimeout(checkWin, 100);
     }
     
-    // Deseleccionar
     tubeElements.forEach(t => t.classList.remove('selected'));
     selected = null;
-    renderTubes();
   }
 }
 
@@ -195,9 +282,37 @@ function renderTubes(){
       let ball = document.createElement('div');
       ball.className = 'ball';
       ball.innerText = ballData.emoji;
+      // Asignar el color individual de fondo
+      ball.style.backgroundColor = ballData.color; 
       tubeEl.appendChild(ball);
     });
   });
+}
+
+function checkWin(){
+  let completedTubes = 0;
+  const avatarsInPlay = getAvatarsForLevel(level).length;
+
+  for(let tube of tubes){
+    // Un tubo está completado si está vacío O si está lleno con 4 elementos iguales
+    if(tube.length === 0){
+      continue;
+    }
+    if(tube.length === TUBE_CAPACITY){
+      const firstEmoji = tube[0].emoji;
+      const allSame = tube.every(ball => ball.emoji === firstEmoji);
+      if(allSame) {
+        completedTubes++;
+      }
+    }
+  }
+
+  // Si se ordenaron la totalidad de avatares activos
+  if(completedTubes === avatarsInPlay){
+    alert(`🎉 ¡Felicidades! Has completado el Nivel ${level}`);
+    level++;
+    createTubes();
+  }
 }
 
 function restartGame(){ 
