@@ -42,23 +42,24 @@
     height: 100vh; 
     display: flex; 
     flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 15px 0;
   }
   
   #gameScreen { display: none; }
   
   h1 { 
-    font-size: 3em; 
+    font-size: 2.2em; 
     color: #FFD700; 
     text-shadow: 0 0 10px #FFD700, 0 0 20px rgba(0,0,0,0.8); 
-    margin: 10px 0; 
+    margin: 5px 0; 
   }
 
   .avatar-list { 
     display: flex; 
     gap: 15px; 
-    margin: 20px 0; 
+    margin: 10px 0; 
     flex-wrap: wrap; 
     justify-content: center; 
     max-width: 80%;
@@ -68,64 +69,106 @@
     background: rgba(0, 0, 0, 0.5); 
     padding: 10px 15px; 
     border-radius: 15px; 
-    font-size: 1.2em; 
+    font-size: 1.1em; 
     border: 1px solid rgba(255,255,255,0.2);
     backdrop-filter: blur(5px);
   }
 
-  .tubes { 
-    display: flex; 
-    gap: 15px; 
-    margin-top: 15px; 
-    flex-wrap: wrap; 
-    justify-content: center; 
-    max-width: 95vw;
+  /* Cabecera del juego inspirada en el diseño del ejemplo (botones de control flotantes superiores) */
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 95vw;
+    max-width: 600px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px 15px;
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
 
+  .icon-btn {
+    background: #3a506b;
+    border: 2px solid #5bc0be;
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.1s, background 0.2s;
+  }
+
+  .icon-btn:active {
+    transform: scale(0.92);
+  }
+
+  .icon-btn:hover {
+    background: #5bc0be;
+    color: #000;
+  }
+
+  .level-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tubes { 
+    display: flex; 
+    gap: 10px; 
+    margin: 5px 0; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    max-width: 98vw;
+    align-items: center;
+  }
+
+  /* Tubos alargados y elegantes con aspecto de probeta similar al juego original */
   .tube { 
-    width: 70px; 
-    height: 280px; 
-    border: 3px solid #FFD700; 
-    border-radius: 35px; 
+    width: 52px; 
+    height: 290px; 
+    border: 3px solid rgba(255, 255, 255, 0.8); 
+    border-top: none; /* Apertura superior característica de tubos de ensayo */
+    border-bottom-left-radius: 25px;
+    border-bottom-right-radius: 25px;
     display: flex; 
     flex-direction: column-reverse; 
-    padding: 5px; 
+    padding: 4px; 
     cursor: pointer; 
-    background: rgba(0, 0, 0, 0.5); 
-    backdrop-filter: blur(5px);
+    background: rgba(20, 20, 40, 0.35); 
+    backdrop-filter: blur(4px);
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.4);
     transition: transform 0.2s, border-color 0.2s;
   }
 
   .tube:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
   }
 
   .ball { 
-    width: 54px; 
-    height: 54px; 
+    width: 42px; 
+    height: 42px; 
     border-radius: 50%; 
     margin: 3px auto; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    font-size: 2em; 
-    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+    font-size: 1.5em; 
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.35), 0 2px 5px rgba(0,0,0,0.3);
     transition: all 0.2s ease;
-  }
-
-  .btn-container {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 10px;
   }
 
   .btn { 
     background: #FFD700; 
     color: #000; 
     border: none; 
-    padding: 12px 25px; 
+    padding: 12px 30px; 
     border-radius: 20px; 
     font-size: 1.1em; 
     cursor: pointer; 
@@ -139,11 +182,10 @@
   }
 
   .selected { 
-    border: 4px solid #FF4500 !important; 
-    box-shadow: 0 0 15px #FF4500; 
+    border-color: #FF4500 !important; 
+    box-shadow: 0 0 15px #FF4500, inset 0 0 10px rgba(255,69,0,0.3); 
   }
 
-  /* Modal interno para mensajes dentro del juego */
   #messageModal {
     position: fixed;
     top: 0;
@@ -174,7 +216,6 @@
 <div id="bgContainer"></div>
 <div id="overlay"></div>
 
-<!-- Modal interno para avisos -->
 <div id="messageModal">
   <div class="modal-content">
     <h2 id="modalTitle" style="color: #FFD700; margin-top: 0;">¡Título!</h2>
@@ -184,35 +225,50 @@
 </div>
 
 <div id="startScreen">
-  <h1>Karipop</h1>
-  <p>Kari pop versión Chiquibeitas</p>
-  <h2>🌟 Los Avatares Principales 🌟</h2>
-  <div class="avatar-list">
-    <div class="avatar">🐰 : Kari</div>
-    <div class="avatar">🧀 : Beita</div>
-    <div class="avatar">🌸 : Daya</div>
-    <div class="avatar">🍒 : Cristi</div>
+  <div>
+    <h1>Karipop</h1>
+    <p>Kari pop versión Chiquibeitas</p>
+  </div>
+  <div>
+    <h2>🌟 Los Avatares Principales 🌟</h2>
+    <div class="avatar-list">
+      <div class="avatar">🐰 : Kari</div>
+      <div class="avatar">🧀 : Beita</div>
+      <div class="avatar">🌸 : Daya</div>
+      <div class="avatar">🍒 : Cristi</div>
+    </div>
   </div>
   <button class="btn" onclick="startGame()">¡Jugar Ahora!</button>
 </div>
 
 <div id="gameScreen">
-  <h1>Karipop</h1>
-  <p id="levelText">Nivel 1 - Ordena a cada avatar en su tubo</p>
-  <p id="movesText" style="font-weight: bold; color: #FFD700;">Intentos restantes: 0</p>
-  <div class="tubes" id="tubes"></div>
-  <div class="btn-container">
-    <button class="btn" onclick="undoMove()">Deshacer</button>
-    <button class="btn" onclick="addExtraTube()">+ Tubo Extra</button>
-    <button class="btn" onclick="restartGame()">Reiniciar</button>
+  <div class="game-header">
+    <button class="icon-btn" onclick="restartGame()" title="Reiniciar">🔄</button>
+    <div class="level-indicator">
+      <span style="font-size: 0.75em; letter-spacing: 1px; color: #ccc;">LEVEL</span>
+      <span id="levelNumberText" style="font-size: 1.3em; font-weight: bold; color: #FFD700;">1</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button class="icon-btn" onclick="undoMove()" title="Deshacer">↩️</button>
+      <button class="icon-btn" onclick="addExtraTube()" title="Tubo Extra" id="extraTubeBtn">➕</button>
+    </div>
   </div>
+
+  <div>
+    <p id="levelText" style="margin: 5px 0 0 0; font-size: 0.95em; color: #e0e0e0;">Ordena a cada avatar en su tubo</p>
+    <p id="movesText" style="margin: 3px 0 5px 0; font-size: 0.85em; color: #FFD700; font-weight: bold;">Intentos restantes: 0</p>
+  </div>
+
+  <div class="tubes" id="tubes"></div>
+
+  <div style="height: 10px;"></div>
 </div>
 
 <script>
 const BACKGROUND_IMAGE_URL = 'https://i.pinimg.com/originals/2h/km/52/2hkm52.jpg'; 
 document.getElementById('bgContainer').style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}')`;
 
-// Colores claros optimizados para que hagan contraste con emojis oscuros o claros
+// Colores claros y contrastantes con los emojis
 const allAvatars = [
   {emoji:'🐰', name:'Kari', color:'#ffb3ba'},     
   {emoji:'🧀', name:'Beita', color:'#ffffba'},    
@@ -228,8 +284,39 @@ let tubes = [];
 let selected = null;
 const TUBE_CAPACITY = 4;
 let remainingMoves = 0;
-let historyMoves = []; // Historial para la función Deshacer (Undo)
+let historyMoves = []; 
 let extraTubeAdded = false;
+
+// Sistema de Audio Sintetizado (Efecto "pop/burbuja" limpio sin dependencias externas)
+let audioCtx = null;
+function playPopSound() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    // Curva de frecuencia ascendente imitando el sonido de una burbuja de agua al moverse
+    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(750, audioCtx.currentTime + 0.08);
+    
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.08);
+  } catch (e) {
+    // Evita bloqueos de políticas de autoplay del navegador
+  }
+}
 
 function getAvatarsForLevel(lvl){
   if(lvl <= 2) return allAvatars.slice(0,4);
@@ -252,7 +339,9 @@ function startGame(){
 }
 
 function createTubes(){
+  document.getElementById('levelNumberText').innerText = level;
   document.getElementById('levelText').innerText = `Nivel ${level} - Ordena a cada avatar en su tubo`;
+  
   const container = document.getElementById('tubes');
   container.innerHTML = '';
   tubes = [];
@@ -260,11 +349,16 @@ function createTubes(){
   historyMoves = [];
   extraTubeAdded = false;
   
+  // Reactivar el botón de tubo extra al iniciar un nuevo nivel
+  const extraBtn = document.getElementById('extraTubeBtn');
+  extraBtn.style.opacity = '1';
+  extraBtn.style.pointerEvents = 'auto';
+  
   const avatars = getAvatarsForLevel(level);
   const totalTubes = getTubesForLevel(level);
   
-  // Asignar un límite de intentos dinámico y generoso según la cantidad de fichas
-  remainingMoves = (avatars.length * TUBE_CAPACITY) * 3;
+  // Limite de intentos ajustado (más preciso y desafiante, evitando exceso innecesario)
+  remainingMoves = (avatars.length * TUBE_CAPACITY) + 12;
   updateMovesDisplay();
 
   let allBalls = [];
@@ -274,7 +368,6 @@ function createTubes(){
     }
   });
   
-  // Mezclar bolitas aleatoriamente
   allBalls.sort(() => Math.random() - 0.5);
   
   for(let i = 0; i < totalTubes; i++){
@@ -307,7 +400,6 @@ function selectTube(i){
       tubeElements[i].classList.add('selected');
     }
   } else {
-    // Reglas de movimiento: Mismo color o tubo vacío, y destino con espacio suficiente
     let validMove = false;
     if (selected !== i && tubes[i].length < TUBE_CAPACITY) {
       let sourceTube = tubes[selected];
@@ -320,11 +412,13 @@ function selectTube(i){
     }
 
     if(validMove){
-      // Guardar estado actual en el historial antes de mover
       historyMoves.push(tubes.map(t => [...t]));
 
       let ball = tubes[selected].pop();
       tubes[i].push(ball);
+      
+      // Reproducir sonido de burbuja al mover exitosamente la ficha
+      playPopSound();
       
       remainingMoves--;
       updateMovesDisplay();
@@ -361,8 +455,11 @@ function addExtraTube() {
     tubeEl.onclick = () => selectTube(newIndex);
     container.appendChild(tubeEl);
     renderTubes();
-  } else {
-    showModal("Aviso", "Ya has añadido el tubo extra en este nivel.");
+    
+    // Deshabilitar visualmente el botón tras usarlo en el nivel actual
+    const extraBtn = document.getElementById('extraTubeBtn');
+    extraBtn.style.opacity = '0.5';
+    extraBtn.style.pointerEvents = 'none';
   }
 }
 
@@ -405,7 +502,7 @@ function checkGameStatus(){
   }
 
   if(completedTubes === avatarsInPlay){
-    showModal("🎉 ¡Nivel Superado!", `Has completado exitosamente el Nivel ${level}.`, () => {
+    showModal("🎉 ¡Nivel Superado!", `¡Excelente! Has completado el Nivel ${level}.`, () => {
       level++;
       createTubes();
     });
@@ -413,7 +510,7 @@ function checkGameStatus(){
   }
 
   if(remainingMoves <= 0) {
-    showModal("😢 ¡Sin Intentos!", "Te has quedado sin movimientos. Reiniciemos el nivel.", () => {
+    showModal("😢 ¡Sin Intentos!", "Te has quedado sin movimientos en este nivel.", () => {
       restartGame();
     });
   }
@@ -424,7 +521,6 @@ function showModal(title, text, callback = null) {
   document.getElementById('modalText').innerText = text;
   const btn = document.getElementById('modalBtn');
   
-  // Reemplazar la acción del botón del modal de forma limpia
   let newBtn = btn.cloneNode(true);
   btn.parentNode.replaceChild(newBtn, btn);
   
