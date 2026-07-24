@@ -184,12 +184,7 @@ background-attachment: fixed;
 <body>
 <!-- PANTALLA DE SELECCIÓN DE AVATAR -->
 <div id="pantallaInicio" style="position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999;">
-    const avataresConfig = [
-    { type: 'Dayana', emoji: '🌸', class: 'avatar-flower' },
-    { type: 'Cristi', emoji: '🍒', class: 'avatar-cherry' },
-    { type: 'Beita', emoji: '🧀', class: 'avatar-cheese' },
-    { type: 'Kari', emoji: '🐰', class: 'avatar-rabbit' }
-];
+
 
         <div onclick="elegirAvatar('Beita')" style="text-align:center; cursor:pointer;">
             <div style="font
@@ -213,17 +208,18 @@ background-attachment: fixed;
         <button onclick="addExtraTube()">+ Tubo Extra</button>
     </div>
 
+    
     <script>
-        // Configuración de avatares disponibles
-        const avataresConfig = [
-    { type: 'star', emoji: '⭐', class: 'avatar-star' },
-    { type: 'cherry', emoji: '🍒', class: 'avatar-cherry' },
-    { type: 'flower', emoji: '🌸', class: 'avatar-flower' },
-    { type: 'cheese', emoji: '🧀', class: 'avatar-cheese' },
-    { type: 'rabbit', emoji: '🐰', class: 'avatar-rabbit' },
-    { type: 'watermelon', emoji: '🍉', class: 'avatar-watermelon' },
-    { type: 'whale', emoji: '🐳', class: 'avatar-whale' }
-];
+    const avataresConfig = [
+    { type: 'Dayana', emoji: '🌸', class: 'avatar-flower' },
+    { type: 'Cristi', emoji: '🍒', class: 'avatar-cherry' },
+    { type: 'Beita', emoji: '🧀', class: 'avatar-cheese' },
+    { type: 'Kari', emoji: '🐰', class: 'avatar-rabbit' }
+    ];
+
+    //... aquí sigue el resto del código del juego
+</script>
+
 
         const TUBE_CAPACITY = 4;
         let currentLevel = 1;
