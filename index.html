@@ -40,16 +40,32 @@ h1 { font-size: 3em; color: #FFD700; text-shadow: 0 0 10px #FFD700; }
 </div>
 
 <script>
-// AQUÍ ESTÁN LOS 7 AVATARES
-const avatars = [
+// NIVELES DESBLOQUEABLES
+const allAvatars = [
   {emoji:'🐰', name:'Kari'},
   {emoji:'🧀', name:'Beita'},
   {emoji:'🌸', name:'Daya'},
   {emoji:'🍒', name:'Cristi'},
-  {emoji:'🦫', name:'Adriana'}, // CASTOR
-  {emoji:'🦭', name:'Mirella'}, // FOCA
-  {emoji:'🦊', name:'Alexis'} // ZORRO
+  {emoji:'🦫', name:'Adriana'}, // Se desbloquea en nivel 3
+  {emoji:'🦭', name:'Mirella'},  // Se desbloquea en nivel 4
+  {emoji:'🦊', name:'Alexis'}    // Se desbloquea en nivel 5
 ];
+
+let level = 1; // Tu nivel actual
+
+function getAvatarsForLevel(lvl){
+  if(lvl <= 2) return allAvatars.slice(0,4); // Niveles 1-2: 4 avatares
+  if(lvl == 3) return allAvatars.slice(0,5); // Nivel 3: 5 avatares
+  if(lvl == 4) return allAvatars.slice(0,6); // Nivel 4: 6 avatares
+  return allAvatars; // Nivel 5+: 7 avatares
+}
+
+function getTubesForLevel(lvl){
+  if(lvl <= 2) return 6;  // Niveles 1-2: 6 tubos
+  if(lvl == 3) return 7;  // Nivel 3: 7 tubos
+  if(lvl == 4) return 8;  // Nivel 4: 8 tubos  
+  return 9; // Nivel 5+: 9 tubos
+}
 
 let tubes = [];
 let selected = null;
