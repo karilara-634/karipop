@@ -1,439 +1,131 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karipop - Noche Estrellada</title>
-    <style>
-        /* Fondo animado estilo Noche Estrellada de Van Gogh */
-        body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0b1d3a, #1c3b57, #122238, #050a14);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #fff;
-            overflow-x: hidden;
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Remolinos decorativos simulando la pintura */
-        .swirl-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            background: radial-gradient(circle, rgba(243,213,115,0.12) 0%, rgba(13,40,79,0) 70%);
-            animation: pulseSwirl 8s ease-in-out infinite alternate;
-            z-index: -1;
-        }
-
-        @keyframes pulseSwirl {
-            0% { transform: scale(1); opacity: 0.5; }
-            100% { transform: scale(1.2); opacity: 0.9; }
-        }
-
-        /* Pantalla de Inicio / Menú Principal */
-        #start-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(11, 29, 58, 0.95), rgba(5, 10, 20, 0.95)), url('https://upload.wikimedia.org/wikipedia/commons/e/ea/Van_Gogh_-_Starry_Night_Google_Art_Project.jpg');
-            background-size: cover;
-            background-blend-mode: overlay;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            text-align: center;
-            padding: 20px;
-        }
-
-        #start-screen h1 {
-            font-size: 4rem;
-            color: #f7d560;
-            margin-bottom: 10px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.8);
-            letter-spacing: 2px;
-        }
-
-        #start-screen p {
-            font-size: 1.2rem;
-            color: #a3e4d7;
-            margin-bottom: 30px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-        }
-
-        /* Contenedor del juego (oculto al inicio) */
-        #game-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        header {
-            text-align: center;
-            margin-top: 20px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 2.2rem;
-            color: #f7d560;
-        }
-
-        .stats-container {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-            font-size: 1.1rem;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 8px 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(247, 213, 96, 0.3);
-        }
-
-        /* Contenedor principal de los tubos */
-        .game-board {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 20px;
-        }
-
-        /* Estilo de los tubos o recipientes */
-        .tube {
-            width: 65px;
-            height: 240px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 4px solid rgba(247, 213, 96, 0.7);
-            border-top: none;
-            border-radius: 0 0 35px 35px;
-            position: relative;
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            padding-bottom: 8px;
-            gap: 6px;
-            cursor: pointer;
-            box-shadow: inset 0 0 15px rgba(255,255,255,0.2), 0 8px 16px rgba(0,0,0,0.4);
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .tube::before {
-            content: '';
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            right: -8px;
-            height: 10px;
-            background: rgba(247, 213, 96, 0.9);
-            border-radius: 5px;
-        }
-
-        .tube.selected {
-            transform: translateY(-12px);
-            border-color: #ffffff;
-            box-shadow: 0 0 20px #f7d560, inset 0 0 15px rgba(255,255,255,0.3);
-        }
-
-        /* Estilo de los avatares caricaturescos dentro de los tubos */
-        .ball {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3);
-            animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            user-select: none;
-        }
-
-        @keyframes bounceIn {
-            0% { transform: scale(0); }
-            70% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        /* Colores temáticos para cada avatar */
-        .avatar-star { background: radial-gradient(circle at 30% 30%, #ffee55, #f57f17); }
-        .avatar-cherry { background: radial-gradient(circle at 30% 30%, #ff5252, #b71c1c); }
-        .avatar-flower { background: radial-gradient(circle at 30% 30%, #ab47bc, #4a148c); }
-        .avatar-cheese { background: radial-gradient(circle at 30% 30%, #ffee58, #fbc02d); }
-
-        /* Controles y botones del juego */
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        button {
-            background: linear-gradient(135deg, #f7d560, #d4ac0d);
-            border: none;
-            padding: 12px 28px;
-            border-radius: 25px;
-            color: #1a1a1a;
-            font-weight: bold;
-            font-size: 1.1rem;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: transform 0.1s, filter 0.2s;
-        }
-
-        button:hover {
-            filter: brightness(1.1);
-            transform: translateY(-2px);
-        }
-
-        button:active {
-            transform: translateY(1px);
-        }
-
-        /* Mensaje emergente de victoria */
-        #message {
-            margin-top: 20px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #a3e4d7;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            min-height: 30px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Karipop</title>
+<style>
+body { margin:0; font-family: 'Poppins', sans-serif; background: linear-gradient(to bottom, #0a0a2a, #1a1a4a); color:white; text-align:center; }
+#startScreen, #gameScreen { width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+#gameScreen { display:none; }
+h1 { font-size: 3em; color: #FFD700; text-shadow: 0 0 10px #FFD700; }
+.avatar-list { display:flex; gap:15px; margin:20px 0; flex-wrap:wrap; justify-content:center; }
+.avatar { background: rgba(255,255,255,0.1); padding:10px 15px; border-radius:15px; font-size:1.2em; }
+.tubes { display:flex; gap:15px; margin-top:20px; flex-wrap:wrap; justify-content:center; }
+.tube { width:70px; height:280px; border:3px solid #FFD700; border-radius:35px; display:flex; flex-direction:column-reverse; padding:5px; cursor:pointer; background: rgba(0,0,0,0.3); }
+.ball { width:60px; height:60px; border-radius:50%; margin:3px auto; display:flex; align-items:center; justify-content:center; font-size:2.5em; background:white; }
+.btn { background:#FFD700; color:#000; border:none; padding:12px 25px; border-radius:20px; font-size:1.1em; cursor:pointer; margin:10px; }
+.selected { border: 4px solid red; }
+</style>
 </head>
 <body>
 
-    <div class="swirl-bg"></div>
+<div id="startScreen">
+  <h1>Karipop</h1>
+  <p> Kari pop version Chiquibeitas</p>
+  <h2>🌟 Los Avatares Principales 🌟</h2>
+  <div class="avatar-list">
+    <div class="avatar">🐰 : Kari</div>
+    <div class="avatar">🧀 : Beita</div>
+    <div class="avatar">🌸 : Daya</div>
+    <div class="avatar">🍒 : Cristi</div>
+  </div>
+  <button class="btn" onclick="startGame()">¡Jugar Ahora!</button>
+</div>
 
-    <!-- Pantalla Inicial con Noche Estrellada y título Karipop -->
-    <div id="start-screen">
-        <h1>Karipop</h1>
-        <p>Uniendo estrellas y avatares bajo la noche de Van Gogh</p>
-        <button onclick="startGame()">¡Jugar Ahora!</button>
-    </div>
+<div id="gameScreen">
+  <h1>Karipop</h1>
+  <p>Nivel 1 - Ordena a cada avatar en su tubo</p>
+  <div class="tubes" id="tubes"></div>
+  <button class="btn" onclick="restartGame()">Reiniciar</button>
+</div>
 
-    <!-- Contenedor del Juego Principal -->
-    <div id="game-container">
-        <header>
-            <h1>Karipop</h1>
-            <div class="stats-container">
-                <span id="level-indicator">Nivel: 1</span>
-                <span id="score-indicator">Puntos: 0</span>
-            </div>
-        </header>
+<script>
+// AQUÍ ESTÁN LOS 7 AVATARES
+const avatars = [
+  {emoji:'🐰', name:'Kari'},
+  {emoji:'🧀', name:'Beita'},
+  {emoji:'🌸', name:'Daya'},
+  {emoji:'🍒', name:'Cristi'},
+  {emoji:'🦫', name:'Adriana'}, // CASTOR
+  {emoji:'🦭', name:'Mirella'}, // FOCA
+  {emoji:'🦊', name:'Alexis'} // ZORRO
+];
 
-        <div class="game-board" id="game-board"></div>
+let tubes = [];
+let selected = null;
 
-        <div id="message"></div>
+function startGame(){
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('gameScreen').style.display='flex';
+  createTubes();
+}
 
-        <div class="controls">
-            <button onclick="undoMove()">Deshacer</button>
-            <button onclick="resetLevel()">Reiniciar</button>
-            <button onclick="addExtraTube()">+ Tubo Extra</button>
-        </div>
-    </div>
+function createTubes(){
+  tubes = [];
+  const tubeDiv = document.getElementById('tubes');
+  tubeDiv.innerHTML='';
 
-    <script>
-        const avataresConfig = [
-            { type: 'star', emoji: '⭐', class: 'avatar-star' },
-            { type: 'cherry', emoji: '🍒', class: 'avatar-cherry' },
-            { type: 'flower', emoji: '🌸', class: 'avatar-flower' },
-            { type: 'cheese', emoji: '🧀', class: 'avatar-cheese' }
-        ];
+  // 4 bolitas de CADA avatar = 28 bolitas y las mezclamos
+  let allBalls = [];
+  avatars.forEach((av, index) => {
+    for(let j=0; j<4; j++){
+      allBalls.push(index);
+    }
+  });
+  allBalls = allBalls.sort(() => Math.random() - 0.5);
 
-        const TUBE_CAPACITY = 4;
-        let currentLevel = 1;
-        let score = 0;
-        let tubes = [];
-        let historyStates = [];
-        let selectedTubeIndex = null;
-        let extraTubeAdded = false;
+  // 7 tubos
+  for(let i=0; i<7; i++){
+    let tube = document.createElement('div');
+    tube.className = 'tube';
+    tube.onclick = () => selectTube(i, tube);
+    tubes.push([]);
 
-        function startGame() {
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-container').style.display = 'flex';
-            initLevel();
-        }
+    if(i<4){
+      for(let j=0; j<7; j++){
+        let avIndex = allBalls.pop();
+        let ball = document.createElement('div');
+        ball.className = 'ball';
+        ball.innerHTML = avatars[avIndex].emoji; // AQUÍ PONE EL EMOJI
+        tube.appendChild(ball);
+        tubes[i].push(avIndex);
+      }
+    }
+    tubeDiv.appendChild(tube);
+  }
+}
 
-        function initLevel() {
-            selectedTubeIndex = null;
-            extraTubeAdded = false;
-            historyStates = [];
-            document.getElementById('message').innerText = '';
-            document.getElementById('level-indicator').innerText = `Nivel: ${currentLevel}`;
-            document.getElementById('score-indicator').innerText = `Puntos: ${score}`;
+function selectTube(i, tubeEl){
+  document.querySelectorAll('.tube').forEach(t => t.classList.remove('selected'));
+  if(selected === null){
+    if(tubes[i].length > 0){
+      selected = i;
+      tubeEl.classList.add('selected');
+    }
+  } else {
+    if(selected!== i && tubes[i].length < 7){
+      let ball = tubes[selected].pop();
+      tubes[i].push(ball);
+      updateTubes();
+    }
+    selected = null;
+  }
+}
 
-            let numColors = Math.min(2 + Math.floor(currentLevel / 2), avataresConfig.length);
-            let activeAvatares = avataresConfig.slice(0, numColors);
+function updateTubes(){
+  const tubeDivs = document.querySelectorAll('.tube');
+  tubeDivs.forEach((tubeEl, i) => {
+    tubeEl.innerHTML = '';
+    tubes[i].forEach(avIndex => {
+      let ball = document.createElement('div');
+      ball.className = 'ball';
+      ball.innerHTML = avatars[avIndex].emoji;
+      tubeEl.appendChild(ball);
+    });
+  });
+}
 
-            let pool = [];
-            activeAvatares.forEach(av => {
-                for (let i = 0; i < TUBE_CAPACITY; i++) {
-                    pool.push({ ...av });
-                }
-            });
-
-            pool.sort(() => Math.random() - 0.5);
-
-            let numFilledTubes = numColors;
-            let numEmptyTubes = 2;
-            let totalTubes = numFilledTubes + numEmptyTubes;
-
-            tubes = [];
-            for (let i = 0; i < totalTubes; i++) {
-                tubes.push([]);
-            }
-
-            let poolIndex = 0;
-            for (let i = 0; i < numFilledTubes; i++) {
-                for (let j = 0; j < TUBE_CAPACITY; j++) {
-                    tubes[i].push(pool[poolIndex++]);
-                }
-            }
-
-            renderBoard();
-        }
-
-        function renderBoard() {
-            const board = document.getElementById('game-board');
-            board.innerHTML = '';
-
-            tubes.forEach((tube, index) => {
-                const tubeEl = document.createElement('div');
-                tubeEl.classList.add('tube');
-                if (selectedTubeIndex === index) {
-                    tubeEl.classList.add('selected');
-                }
-                tubeEl.onclick = () => handleTubeClick(index);
-
-                tube.forEach(item => {
-                    const ballEl = document.createElement('div');
-                    ballEl.classList.add('ball', item.class);
-                    ballEl.innerText = item.emoji;
-                    tubeEl.appendChild(ballEl);
-                });
-
-                board.appendChild(tubeEl);
-            });
-        }
-
-        function handleTubeClick(index) {
-            if (selectedTubeIndex === null) {
-                if (tubes[index].length === 0) return;
-                selectedTubeIndex = index;
-            } else {
-                if (selectedTubeIndex === index) {
-                    selectedTubeIndex = null;
-                } else {
-                    if (isValidMove(selectedTubeIndex, index)) {
-                        saveStateForUndo();
-                        let movingItem = tubes[selectedTubeIndex].pop();
-                        tubes[index].push(movingItem);
-                        selectedTubeIndex = null;
-                        checkWinCondition();
-                    } else {
-                        if (tubes[index].length > 0) {
-                            selectedTubeIndex = index;
-                        } else {
-                            selectedTubeIndex = null;
-                        }
-                    }
-                }
-            }
-            renderBoard();
-        }
-
-        function isValidMove(fromIdx, toIdx) {
-            const origin = tubes[fromIdx];
-            const destination = tubes[toIdx];
-
-            if (destination.length >= TUBE_CAPACITY) return false;
-            if (origin.length === 0) return false;
-            if (destination.length === 0) return true;
-
-            const topOrigin = origin[origin.length - 1];
-            const topDestination = destination[destination.length - 1];
-
-            return topOrigin.type === topDestination.type;
-        }
-
-        function saveStateForUndo() {
-            let stateCopy = tubes.map(tube => tube.map(item => ({ ...item })));
-            historyStates.push(stateCopy);
-        }
-
-        function undoMove() {
-            if (historyStates.length > 0) {
-                tubes = historyStates.pop();
-                selectedTubeIndex = null;
-                document.getElementById('message').innerText = '';
-                renderBoard();
-            }
-        }
-
-        function resetLevel() {
-            initLevel();
-        }
-
-        function addExtraTube() {
-            if (!extraTubeAdded) {
-                tubes.push([]);
-                extraTubeAdded = true;
-                renderBoard();
-            } else {
-                document.getElementById('message').innerText = 'Ya agregaste un tubo extra en este nivel.';
-            }
-        }
-
-        function checkWinCondition() {
-            let won = true;
-            tubes.forEach(tube => {
-                if (tube.length > 0) {
-                    if (tube.length < TUBE_CAPACITY) {
-                        won = false;
-                    } else {
-                        let firstType = tube[0].type;
-                        for (let i = 1; i < tube.length; i++) {
-                            if (tube[i].type !== firstType) {
-                                won = false;
-                            }
-                        }
-                    }
-                }
-            });
-
-            if (won) {
-                score += currentLevel * 100;
-                document.getElementById('score-indicator').innerText = `Puntos: ${score}`;
-                document.getElementById('message').innerText = '¡Nivel Superado! Subiendo de nivel...';
-                setTimeout(() => {
-                    currentLevel++;
-                    initLevel();
-                }, 1500);
-            }
-        }
-    </script>
+function restartGame(){ createTubes(); }
+</script>
 </body>
 </html>
