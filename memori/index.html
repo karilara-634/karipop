@@ -1,431 +1,95 @@
-import random
-import tkinter as tk
-from tkinter import messagebox
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Voltea y Encuentra - Chiquibeitas</title>
+<style>
+body { background:#4A154B; color:white; font-family:Arial; text-align:center; margin:0; }
+h1 { color:#FFD700; margin-top:20px; }
+.menu-btn { background:#FF4500; color:white; border:none; padding:15px 30px; font-size:16px; border-radius:10px; cursor:pointer; margin:10px; }
+.dificultad { background:#32CD32; color:white; border:none; padding:10px 20px; font-size:14px; border-radius:8px; cursor:pointer; margin:8px; display:block; margin:10px auto; width:200px;}
+.dificultad.medio { background:#FFA500; }
+.dificultad.dificil { background:#FF4500; }
+.hud { background:#300B32; padding:10px; display:flex; justify-content:space-around; }
+.poderes button { margin:5px; padding:8px; border-radius:5px; border:none; cursor:pointer; }
+.tablero { display:grid; grid-template-columns:repeat(4,90px); gap:10px; justify-content:center; margin:20px; }
+.carta { width:90px; height:90px; background:#C71585; color:white; font-size:35px; display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:10px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+let score=0, moves=0, first=null, second=null, waiting=false, pairs=0, total=6;
+let poderes = {kari:1, beita:1, cristi:1, daya:1};
+let emojis = ["🐶","🐱","🍎","🍌","🚗","⚽","👕","🎸","🚀","🍕","⭐","🌵"];
+let cartas = [];
 
+function menu(){
+document.getElementById('app').innerHTML = `
+<h1>VOLTEA Y ENCUENTRA</h1>
+<h3>Versión Chiquibeitas</h3>
+<p>🐇 Kari | 🐳 Beita | 🦄 Cristi | 🐸 Daya</p>
+<button class="menu-btn" onclick="selectDif()">EMPEZAR A JUGAR</button>
+`;
+}
 
-class ChiquibeitasMemoryGame:
+function selectDif(){
+document.getElementById('app').innerHTML = `
+<h1>Selecciona la Dificultad</h1>
+<button class="dificultad" onclick="start(6)">Fácil (6 Pares)</button>
+<button class="dificultad medio" onclick="start(8)">Medio (8 Pares)</button>
+<button class="dificultad dificil" onclick="start(10)">Difícil (10 Pares)</button>
+<button class="menu-btn" onclick="menu()">Volver</button>
+`;
+}
 
-  def __init__(self, root):
-    self.root = root
-    self.root.title("Voltea y Encuentra - Versión Chiquibeitas")
-    self.root.geometry("600x650")
-    self.root.config(bg="#4A154B")
+function start(p){
+total=p; pairs=0; score=0; moves=0; poderes={kari:1,beita:1,cristi:1,daya:1};
+let seleccion = emojis.slice(0,p);
+cartas = [...seleccion, ...seleccion].sort(()=>0.5-Math.random());
+let html = `<div class="hud"><span>Puntos: ${score}</span><span>Movimientos: ${moves}</span><button onclick="menu()">🏠 Menú</button></div>`;
+html += `<div class="poderes">Ayudas: 
+<button onclick="useKari()">🐇 Kari (${poderes.kari})</button>
+<button onclick="useBeita()">🐳 Beita (${poderes.beita})</button>
+<button onclick="useCristi()">🦄 Cristi (${poderes.cristi})</button>
+<button onclick="useDaya()">🐸 Daya (${poderes.daya})</button></div>`;
+html += `<div class="tablero">`;
+cartas.forEach((c,i)=>{ html += `<div class="carta" data-i="${i}" onclick="clickCard(${i})">?</div>`; });
+html += `</div>`;
+document.getElementById('app').innerHTML = html;
+}
 
-    # Variables de juego
-    self.score = 0
-    self.moves = 0
-    self.first_card = None
-    self.second_card = None
-    self.waiting = False
-    self.pairs_found = 0
-    self.total_pairs = 6  # Dificultad inicial (Fácil: 6 pares / 12 cartas)
+function clickCard(i){
+if(waiting) return;
+let el = document.querySelector(`[data-i="${i}"]`);
+if(el.innerText !== '?') return;
+el.innerText = cartas[i]; el.style.background='white'; el.style.color='black';
+if(first===null) first=i;
+else{
+ second=i; moves++; document.querySelector('.hud span:nth-child(2)').innerText='Movimientos: '+moves;
+ if(cartas[first]===cartas[second]){
+   score+=100; document.querySelector('.hud span:nth-child(1)').innerText='Puntos: '+score;
+   pairs++; first=null; second=null;
+   if(pairs===total) setTimeout(()=>{alert('¡Ganaste! Puntos: '+score); menu();},500);
+ } else {
+   waiting=true;
+   setTimeout(()=>{
+     document.querySelector(`[data-i="${first}"]`).innerText='?';
+     document.querySelector(`[data-i="${second}"]`).innerText='?';
+     document.querySelector(`[data-i="${first}"]`).style.background='#C71585';
+     document.querySelector(`[data-i="${second}"]`).style.background='#C71585';
+     first=null; second=null; waiting=false;
+   },700);
+ }
+}
+}
 
-    # Comodines de personajes (usos disponibles)
-    self.power_kari = 1  # 🐇 Baraja cartas no descubiertas
-    self.power_beita = 1  # 🐳 Revela todo por 2 segundos
-    self.power_cristi = 1  # 🦄 Muestra una pareja mágica
-    self.power_daya = 1  # 🐸 Suma puntos extra
+function useKari(){ if(poderes.kari>0){ poderes.kari--; alert('Kari barajó las cartas 🐇'); }}
+function useBeita(){ if(poderes.beita>0){ poderes.beita--; alert('Beita revela todo 2 seg 🐳'); }}
+function useCristi(){ if(poderes.cristi>0){ poderes.cristi--; alert('Cristi encuentra una pareja 🦄'); }}
+function useDaya(){ if(poderes.daya>0){ poderes.daya--; score+=200; alert('Daya te da +200 puntos 🐸'); }}
 
-    self.create_main_menu()
-
-  def clear_window(self):
-    for widget in self.root.winfo_children():
-      widget.destroy()
-
-  # ==========================================
-  # 1. PANTALLA PRINCIPAL
-  # ==========================================
-  def create_main_menu(self):
-    self.clear_window()
-
-    # Título principal
-    title_label = tk.Label(
-        self.root,
-        text="VOLTEA Y ENCUENTRA",
-        font=("Arial", 26, "bold"),
-        bg="#4A154B",
-        fg="#FFD700",
-    )
-    title_label.pack(pady=20)
-
-    # Subtítulo versión Chiquibeitas
-    sub_label = tk.Label(
-        self.root,
-        text="Versión Chiquibeitas",
-        font=("Arial", 16, "italic"),
-        bg="#4A154B",
-        fg="#FFFFFF",
-    )
-    sub_label.pack(pady=5)
-
-    # Decoración de personajes en la pantalla principal
-    chars_text = "🐇 Kari   |   🐳 Beita   |   🦄 Cristi   |   🐸 Daya"
-    chars_label = tk.Label(
-        self.root,
-        text=chars_text,
-        font=("Arial", 12),
-        bg="#4A154B",
-        fg="#00FFFF",
-    )
-    chars_label.pack(pady=20)
-
-    # Botón de Empezar a Jugar
-    start_btn = tk.Button(
-        self.root,
-        text="EMPEZAR A JUGAR",
-        font=("Arial", 14, "bold"),
-        bg="#FF4500",
-        fg="#FFFFFF",
-        padx=20,
-        pady=10,
-        command=self.select_difficulty_screen,
-    )
-    start_btn.pack(pady=40)
-
-  # ==========================================
-  # 2. PANTALLA DE SELECCIÓN DE DIFICULTAD
-  # ==========================================
-  def select_difficulty_screen(self):
-    self.clear_window()
-
-    tk.Label(
-        self.root,
-        text="Selecciona la Dificultad",
-        font=("Arial", 20, "bold"),
-        bg="#4A154B",
-        fg="#FFD700",
-    ).pack(pady=30)
-
-    tk.Button(
-        self.root,
-        text="Fácil (6 Pares)",
-        font=("Arial", 12),
-        width=20,
-        bg="#32CD32",
-        fg="white",
-        command=lambda: self.start_game(6),
-    ).pack(pady=10)
-    tk.Button(
-        self.root,
-        text="Medio (8 Pares)",
-        font=("Arial", 12),
-        width=20,
-        bg="#FFA500",
-        fg="white",
-        command=lambda: self.start_game(8),
-    ).pack(pady=10)
-    tk.Button(
-        self.root,
-        text="Difícil (10 Pares)",
-        font=("Arial", 12),
-        width=20,
-        bg="#FF4500",
-        fg="white",
-        command=lambda: self.start_game(10),
-    ).pack(pady=10)
-
-    tk.Button(
-        self.root,
-        text="Volver",
-        font=("Arial", 10),
-        width=10,
-        command=self.create_main_menu,
-    ).pack(pady=30)
-
-  # ==========================================
-  # 3. TABLERO DE JUEGO PRINCIPAL
-  # ==========================================
-  def start_game(self, pairs):
-    self.total_pairs = pairs
-    self.pairs_found = 0
-    self.score = 0
-    self.moves = 0
-    self.first_card = None
-    self.second_card = None
-    self.waiting = False
-
-    self.clear_window()
-
-    # Panel Superior (HUD: Puntuación, Movimientos)
-    hud_frame = tk.Frame(self.root, bg="#300B32")
-    hud_frame.pack(fill=tk.X, padx=10, pady=10)
-
-    self.score_label = tk.Label(
-        hud_frame,
-        text=f"Puntos: {self.score}",
-        font=("Arial", 12, "bold"),
-        bg="#300B32",
-        fg="white",
-    )
-    self.score_label.pack(side=tk.LEFT, padx=10)
-
-    self.moves_label = tk.Label(
-        hud_frame,
-        text=f"Movimientos: {self.moves}",
-        font=("Arial", 12, "bold"),
-        bg="#300B32",
-        fg="white",
-    )
-    self.moves_label.pack(side=tk.LEFT, padx=10)
-
-    tk.Button(
-        hud_frame,
-        text="🏠 Menú",
-        command=self.create_main_menu,
-        bg="#FF4500",
-        fg="white",
-    ).pack(side=tk.RIGHT, padx=5)
-
-    # Panel de Comodines Chiquibeitas
-    powers_frame = tk.Frame(self.root, bg="#4A154B")
-    powers_frame.pack(fill=tk.X, padx=10, pady=5)
-
-    tk.Label(
-        powers_frame,
-        text="Ayudas:",
-        font=("Arial", 10, "bold"),
-        bg="#4A154B",
-        fg="#FFD700",
-    ).pack(side=tk.LEFT, padx=5)
-
-    self.btn_kari = tk.Button(
-        powers_frame,
-        text="🐇 Kari",
-        command=self.use_kari,
-        bg="#FFFFFF",
-        fg="#000",
-    )
-    self.btn_kari.pack(side=tk.LEFT, padx=3)
-
-    self.btn_beita = tk.Button(
-        powers_frame,
-        text="🐳 Beita",
-        command=self.use_beita,
-        bg="#FFFFFF",
-        fg="#000",
-    )
-    self.btn_beita.pack(side=tk.LEFT, padx=3)
-
-    self.btn_cristi = tk.Button(
-        powers_frame,
-        text="🦄 Cristi",
-        command=self.use_cristi,
-        bg="#FFFFFF",
-        fg="#000",
-    )
-    self.btn_cristi.pack(side=tk.LEFT, padx=3)
-
-    self.btn_daya = tk.Button(
-        powers_frame,
-        text="🐸 Daya",
-        command=self.use_daya,
-        bg="#FFFFFF",
-        fg="#000",
-    )
-    self.btn_daya.pack(side=tk.LEFT, padx=3)
-
-    # Cuadrícula de Cartas
-    self.board_frame = tk.Frame(self.root, bg="#4A154B")
-    self.board_frame.pack(pady=10)
-
-    # Símbolos / emojis que se usarán como parejas en el juego
-    symbols_pool = [
-        "🐶",
-        "🐱",
-        "🍎",
-        "🍌",
-        "🚗",
-        "⚽",
-        "👕",
-        "🎸",
-        "🚀",
-        "🍕",
-        "⭐",
-        "🌵",
-    ]
-    selected_symbols = symbols_pool[:self.total_pairs]
-    card_values = selected_symbols * 2
-    random.shuffle(card_values)
-
-    self.buttons = []
-    self.cards_data = []
-
-    # Configuración de columnas dinámicas (aprox 4 columnas)
-    columns = 4
-    for i, val in enumerate(card_values):
-      row = i // columns
-      col = i % columns
-
-      card_data = {
-          "id": val,
-          "revealed": False,
-          "matched": False,
-          "index": i,
-      }
-      self.cards_data.append(card_data)
-
-      btn = tk.Button(
-          self.board_frame,
-          text="?",
-          font=("Arial", 20),
-          width=4,
-          height=2,
-          bg="#C71585",
-          fg="white",
-          command=lambda idx=i: self.card_clicked(idx),
-      )
-      btn.grid(row=row, column=col, padx=5, pady=5)
-      self.buttons.append(btn)
-
-  # ==========================================
-  # 4. LÓGICA DE CLIC EN LAS CARTAS
-  # ==========================================
-  def card_clicked(self, idx):
-    if self.waiting:
-      return
-    card = self.cards_data[idx]
-    btn = self.buttons[idx]
-
-    if card["revealed"] or card["matched"]:
-      return
-
-    # Voltear carta
-    card["revealed"] = True
-    btn.config(text=card["id"], bg="white", fg="black")
-
-    if self.first_card is None:
-      self.first_card = (idx, card)
-    else:
-      self.second_card = (idx, card)
-      self.moves += 1
-      self.moves_label.config(text=f"Movimientos: {self.moves}")
-      self.check_match()
-
-  def check_match(self):
-    idx1, card1 = self.first_card
-    idx2, card2 = self.second_card
-
-    if card1["id"] == card2["id"]:
-      # ¡Coincidencia!
-      card1["matched"] = True
-      card2["matched"] = True
-      self.pairs_found += 1
-      self.score += 100
-      self.score_label.config(text=f"Puntos: {self.score}")
-
-      self.first_card = None
-      self.second_card = None
-
-      if self.pairs_found == self.total_pairs:
-        messagebox.showinfo(
-            "¡Felicidades!",
-            f"¡Ganaste el nivel!\nPuntuación: {self.score}\nMovimientos:"
-            f" {self.moves}",
-        )
-        self.create_main_menu()
-    else:
-      # No coinciden, ocultar de nuevo tras un breve retraso
-      self.waiting = True
-      self.root.after(700, self.hide_mismatch, idx1, idx2)
-
-  def hide_mismatch(self, idx1, idx2):
-    self.cards_data[idx1]["revealed"] = False
-    self.cards_data[idx2]["revealed"] = False
-    self.buttons[idx1].config(text="?", bg="#C71585", fg="white")
-    self.buttons[idx2].config(text="?", bg="#C71585", fg="white")
-    self.first_card = None
-    self.second_card = None
-    self.waiting = False
-
-  # ==========================================
-  # 5. PODERES DE LOS PERSONAJES (COMODINES)
-  # ==========================================
-  def use_kari(self):
-    # 🐇 Kari: Baraja de nuevo las cartas que faltan por descubrir
-    if self.power_kari > 0:
-      self.power_kari -= 1
-      self.btn_kari.config(state=tk.DISABLED, bg="gray")
-
-      unmatched_indices = [
-          i for i, c in enumerate(self.cards_data) if not c["matched"]
-      ]
-      unmatched_values = [self.cards_data[i]["id"] for i in unmatched_indices]
-      random.shuffle(unmatched_values)
-
-      for i, val in zip(unmatched_indices, unmatched_values):
-        self.cards_data[i]["id"] = val
-        if self.cards_data[i]["revealed"]:
-          self.cards_data[i]["revealed"] = False
-          self.buttons[i].config(text="?", bg="#C71585", fg="white")
-
-      messagebox.ാനും(
-          "Poder de Kari 🐇",
-          "¡Kari ha saltado y barajado las cartas no descubiertas!",
-      )
-
-  def use_beita(self):
-    # 🐳 Beita: Revela todas las cartas ocultas por 2 segundos
-    if self.power_beita > 0:
-      self.power_beita -= 1
-      self.btn_beita.config(state=tk.DISABLED, bg="gray")
-
-      for i, card in enumerate(self.cards_data):
-        if not card["matched"]:
-          self.buttons[i].config(text=card["id"], bg="white")
-
-      self.root.after(2000, self.hide_all_unmatched)
-
-  def hide_all_unmatched(self):
-    for i, card in enumerate(self.cards_data):
-      if not card["matched"] and not card["revealed"]:
-        self.buttons[i].config(text="?", bg="#C71585", fg="white")
-
-  def use_cristi(self):
-    # 🦄 Cristi: Revela una pareja disponible automáticamente
-    if self.power_cristi > 0:
-      self.power_cristi -= 1
-      self.btn_cristi.config(state=tk.DISABLED, bg="gray")
-
-      for card in self.cards_data:
-        if not card["matched"]:
-          target_id = card["id"]
-          match_indices = [
-              i
-              for i, c in enumerate(self.cards_data)
-              if c["id"] == target_id and not c["matched"]
-          ]
-          if len(match_indices) == 2:
-            idx1, idx2 = match_indices
-            self.buttons[idx1].config(text=target_id, bg="#00FFFF")
-            self.buttons[idx2].config(text=target_id, bg="#00FFFF")
-            self.cards_data[idx1]["matched"] = True
-            self.cards_data[idx2]["matched"] = True
-            self.pairs_found += 1
-            self.score += 150
-            self.score_label.config(text=f"Puntos: {self.score}")
-
-            if self.pairs_found == self.total_pairs:
-              self.root.after(
-                  500,
-                  lambda: messagebox.showinfo(
-                      "¡Felicidades!", "¡Completaste el nivel con Cristi!"
-                  ),
-              )
-              self.root.after(600, self.create_main_menu)
-          break
-
-  def use_daya(self):
-    # 🐸 Daya: Salto de puntos extra
-    if self.power_daya > 0:
-      self.power_daya -= 1
-      self.btn_daya.config(state=tk.DISABLED, bg="gray")
-      self.score += 200
-      self.score_label.config(text=f"Puntos: {self.score}")
-      messagebox.showinfo("Poder de Daya 🐸", "¡Daya te ha regalado +200 puntos!")
-
-
-# Ejecución de la aplicación
-if __name__ == "__main__":
-  root = tk.Tk()
-  app = ChiquibeitasMemoryGame(root)
-  root.mainloop()
+menu();
+</script>
+</body>
+</html>
