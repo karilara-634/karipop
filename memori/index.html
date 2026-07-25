@@ -1,0 +1,271 @@
+// ============================================================================
+// SISTEMA CENTRAL DEL JUEGO DE MEMORIA
+// ============================================================================
+
+// --- Enumeraciones para definir estados del juego ---
+enum GameMode { CLASSIC, TWO_PLAYER, TIME_ATTACK }
+enum Difficulty { EASY, MEDIUM, HARD }
+
+// --- Estructura de una Carta ---
+class Card {
+    int id;             // Identificador único para saber si dos cartas son pareja (ej. dos cartas con id=5 son pareja)
+    string imagePath;   // Ruta a la imagen (PNG) que se mostrará al voltear
+    bool isFaceUp;      // Estado de la carta (boca arriba o boca abajo)
+    bool isMatched;     // Estado de la carta (si ya fue emparejada)
+    GameObject visualObject; // Referencia al objeto visual en la escena (el prefab de la carta)
+
+    // Constructor
+    Card(int _id, string _path) {
+        id = _id;
+        imagePath = _path;
+        isFaceUp = false;
+        isMatched = false;
+    }
+
+    // Método para voltear la carta visualmente (activar animación de giro)
+    void Flip() {
+        isFaceUp = !isFaceUp;
+        // Aquí iría la llamada a la animación de Unity/Godot
+    }
+}
+
+// --- Gestor Principal del Nivel ---
+class LevelManager {
+    List<Card> allCards;      // Lista de todas las cartas en el tablero
+    Card firstCardFlipped;    // Referencia a la primera carta volteada en un turno
+    Card secondCardFlipped;   // Referencia a la segunda carta volteada en un turno
+    bool isCheckingMatch;     // Bandera para evitar que el jugador haga clics mientras se comparan cartas
+    int score;                // Puntuación actual del jugador
+    int moves;                // Contador de movimientos (volteos)
+    int timer;                // Temporizador del nivel
+    int pairsFound;           // Contador de parejas encontradas
+    int totalPairsToFind;     // Total de parejas que tiene el nivel
+
+    // --- INICIALIZACIÓN DEL NIVEL ---
+    void StartLevel(Difficulty difficulty, GameMode mode) {
+        score = 0;
+        moves = 0;
+        pairsFound = 0;
+        
+        // 1. Definir tamaño del tablero según dificultad
+        SetupBoardSize(difficulty);
+
+        // 2. Generar pares de cartas (asegurarse de que cada imagen tenga su par exacto)
+        GeneratePairsForTheme("Animals"); // Ejemplo de temática: Animales
+
+        // 3. Mezclar las cartas aleatoriamente
+        ShuffleCards(allCards);
+
+        // 4. Colocar las cartas visualmente en la cuadrícula
+        PlaceCardsOnGrid();
+
+        // 5. Iniciar temporizador (si aplica el modo)
+        if (mode == GameMode.TIME_ATTACK) { StartTimer(); }
+    }
+
+    // Configurar tamaño del tablero
+    void SetupBoardSize(Difficulty difficulty) {
+        switch (difficulty) {
+            case Difficulty.EASY: totalPairsToFind = 6; break; // Tablero 3x4
+            case Difficulty.MEDIUM: totalPairsToFind = 15; break; // Tablero 5x6
+            case Difficulty.HARD: totalPairsToFind = 24; break; // Tablero 6x8
+            // Puedes agregar más niveles de dificultad con más cartas
+        }
+    }
+
+    // Generar pares de cartas (usando la Base de Datos de Imágenes)
+    void GeneratePairsForTheme(string theme) {
+        allCards = new List<Card>();
+        for (int i = 1; i <= totalPairsToFind; i++) {
+            // Cargar dos cartas con el mismo ID y la misma imagen
+            string path = "Images/" + theme + "/" + i; 
+            allCards.Add(new Card(i, path)); // Carta 1 del par
+            allCards.Add(new Card(i, path)); // Carta 2 del par
+        }
+    }
+
+    // Algoritmo de mezcla (Fisher-Yates Shuffle)
+    void ShuffleCards(List<Card> cards) {
+        Random rng = new Random();
+        int n = cards.Count;
+        while (n > 1) {
+            n--;
+            int k = rng.Next(n + 1);
+            Card value = cards[k];
+            cards[k] = cards[n];
+            cards[n] = value;
+        }
+    }
+
+    // Colocar las cartas en la interfaz gráfica
+    void PlaceCardsOnGrid() {
+        // Esto instanciará los "prefabs" de las cartas en el layout de la cuadrícula
+        // y conectará el clic de cada objeto visual con el método OnCardClicked
+    }
+
+    // --- MECÁNICA PRINCIPAL ---
+    // Este método se llama cada vez que el jugador toca una carta
+    void OnCardClicked(Card clickedCard) {
+        // Si ya hay dos cartas volteadas, si la carta ya está emparejada, o si estamos verificando, no hacer nada
+        if (isCheckingMatch || clickedCard.isFaceUp || clickedCard.isMatched) return;
+
+        // Voltear la carta visualmente
+        clickedCard.Flip();
+        moves++;
+
+        // Si es la primera carta del turno, guardarla
+        if (firstCardFlipped == null) {
+            firstCardFlipped = clickedCard;
+        } 
+        // Si es la segunda carta, iniciar la comparación
+        else {
+            secondCardFlipped = clickedCard;
+            StartCoroutine(CheckMatchRoutine()); // Usar corrutina para dar tiempo a la animación
+        }
+    }
+
+    // Corrutina para verificar la coincidencia
+    IEnumerator CheckMatchRoutine() {
+        isCheckingMatch = true;
+
+        // Esperar medio segundo para que el jugador vea la segunda carta
+        yield return new WaitForSeconds(0.5f);
+
+        // Si los IDs coinciden
+        if (firstCardFlipped.id == secondCardFlipped.id) {
+            OnMatchFound();
+        } 
+        // Si los IDs NO coinciden
+        else {
+            OnMatchNotFound();
+        }
+
+        // Limpiar referencias y permitir nuevos clics
+        firstCardFlipped = null;
+        secondCardFlipped = null;
+        isCheckingMatch = false;
+    }
+
+    // --- LÓGICA DE EMPAREJAMIENTO ---
+    void OnMatchFound() {
+        firstCardFlipped.isMatched = true;
+        secondCardFlipped.isMatched = true;
+        pairsFound++;
+        score += 100; // Sumar puntos fijos por pareja
+        score += CalculateSpeedBonus(); // Sumar bonificación por rapidez
+        
+        CheckWinCondition();
+    }
+
+    // LÓGICA DE NO EMPAREJAMIENTO ---
+    void OnMatchNotFound() {
+        // Volver a ocultar las cartas
+        firstCardFlipped.Flip();
+        secondCardFlipped.Flip();
+        score -= 10; // Restar puntos por error (opcional)
+    }
+
+    // Cálculo de bonificación por rapidez
+    int CalculateSpeedBonus() {
+        // Esto dependerá de cuánto tiempo tardó el jugador en encontrar la pareja
+        // Si el tiempo transcurrido desde el último emparejamiento es bajo, dar puntos extra
+        return 50; // Valor de ejemplo
+    }
+
+    // Comprobar si se encontraron todas las parejas
+    void CheckWinCondition() {
+        if (pairsFound == totalPairsToFind) {
+            EndLevel();
+        }
+    }
+
+    // --- FINALIZACIÓN DEL NIVEL ---
+    void EndLevel() {
+        // Detener el temporizador
+        // Mostrar pantalla de "Nivel Completado" con estrellas, puntuación y botón de "Siguiente Nivel"
+        // Guardar progreso y desbloquear siguiente nivel
+    }
+}
+
+// ============================================================================
+// SISTEMA DE PERSONAJES (CHIQUIBEITAS POWER-UPS)
+// ============================================================================
+
+class PowerUpManager {
+    // Referencia al LevelManager para afectar el juego
+    LevelManager levelManager;
+
+    // --- MÉTODOS DE LOS PERSONAJES ---
+
+    // Kari (Conejo) - Barajar Tablero
+    void ActivateKariPower() {
+        // 1. Obtener solo las cartas que NO están emparejadas
+        List<Card> cardsToShuffle = new List<Card>();
+        foreach (Card card in levelManager.allCards) {
+            if (!card.isMatched) {
+                cardsToShuffle.Add(card);
+            }
+        }
+        // 2. Barajarlas
+        levelManager.ShuffleCards(cardsToShuffle);
+        // 3. Reposicionarlas visualmente en la cuadrícula
+        levelManager.PlaceCardsOnGrid();
+    }
+
+    // Beita (Ballena) - Revelar Todo
+    IEnumerator ActivateBeitaPower() {
+        // 1. Voltear todas las cartas que NO están emparejadas
+        foreach (Card card in levelManager.allCards) {
+            if (!card.isMatched && !card.isFaceUp) {
+                card.Flip();
+            }
+        }
+        // 2. Esperar 3 segundos
+        yield return new WaitForSeconds(3.0f);
+        // 3. Volver a ocultarlas
+        foreach (Card card in levelManager.allCards) {
+            if (!card.isMatched && card.isFaceUp) {
+                card.Flip();
+            }
+        }
+    }
+
+    // Cristi (Unicornio) - Ver Pareja
+    void ActivateCristiPower() {
+        // 1. Encontrar una pareja que no haya sido emparejada
+        Card card1 = null;
+        Card card2 = null;
+
+        foreach (Card card in levelManager.allCards) {
+            if (!card.isMatched) {
+                // Encontramos la primera carta, buscamos su pareja
+                card1 = card;
+                foreach (Card innerCard in levelManager.allCards) {
+                    if (innerCard != card && innerCard.id == card.id && !innerCard.isMatched) {
+                        card2 = innerCard;
+                        break;
+                    }
+                }
+                break; // Ya encontramos la pareja, salimos
+            }
+        }
+
+        // 2. Resaltar visualmente ambas cartas (brillo, borde especial)
+        if (card1 != null && card2 != null) {
+            // Llamar a método visual para resaltar
+            HighlightCards(card1, card2);
+        }
+    }
+
+    // Daya (Rana) - Tiempo Extra
+    void ActivateDayaPower() {
+        // 1. Añadir tiempo al temporizador
+        // levelManager.timer += 10;
+        // O pausar el temporizador por unos segundos si es el modo clásico
+    }
+    
+    // Método visual para resaltar cartas (ejemplo)
+    void HighlightCards(Card c1, Card c2) {
+        // Esto dependerá de la implementación visual
+    }
+}
